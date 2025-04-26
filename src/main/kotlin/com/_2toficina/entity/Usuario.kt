@@ -1,6 +1,6 @@
 package com._2toficina.entity
 
-import com._2toficina.TipoUsuarioEnum
+import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.*
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -13,33 +13,33 @@ data class Usuario(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int = 0,
 
-    @ManyToOne
-    @JoinColumn(name = "fkEndereco")
-    var endereco: Endereco? = null,
+    @field:Column
+    var fkEndereco: Int? = null,
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "fkTipoUsuario", nullable = false)
-    var tipo: TipoUsuarioEnum = TipoUsuarioEnum.CLIENTE,
+    @field:Column(nullable = false)
+    var fkTipoUsuario: Int = 0,
 
-    @Column(nullable = false, length = 45)
+    @field:Column(nullable = false, length = 45)
     var nome: String = "",
 
-    @Column(length = 45)
-    var telefone: String? = null,
+    @field:Column(nullable = false, length = 45)
+    var sobrenome: String = "",
 
-    @Column(nullable = false, length = 256)
+    @field:Column(nullable = false, length = 45)
+    var telefone: String = "",
+
+    @field:Column(nullable = false, length = 256)
     var email: String = "",
 
-    @Column(nullable = false, length = 128)
+    @field:Column(nullable = false, length = 128)
     var senha: String = "",
 
-    @Column(name = "data_cadastro")
+    @field:Column(nullable = false, name = "data_cadastro")
     var dataCadastro: LocalDateTime = LocalDateTime.now(),
 
-    @Column(length = 45)
+    @field:Column(length = 45)
     var sexo: String? = null,
 
-    @Column(name = "data_nasc")
+    @field:Column(name = "data_nasc")
     var dataNascimento: LocalDate? = null
 )
-
