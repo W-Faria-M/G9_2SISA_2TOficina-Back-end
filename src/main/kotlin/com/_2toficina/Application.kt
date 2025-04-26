@@ -1,4 +1,4 @@
-package com._2toficina.security
+package com._2toficina
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
