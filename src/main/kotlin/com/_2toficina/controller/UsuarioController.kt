@@ -5,6 +5,7 @@ import com._2toficina.dto.RespostaLogin
 import com._2toficina.dto.RespostaUsuario
 import com._2toficina.entity.Usuario
 import com._2toficina.repository.UsuarioRepository
+import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDate
@@ -17,6 +18,11 @@ class UsuarioController(
     private val loginStatus = mutableMapOf<Int, Boolean>()
 
     @GetMapping
+    @Operation(summary = "Lista todos os usuários ou filtra por tipo.",
+        description = """
+        Retorna uma lista com os usuários cadastrados.
+        Se o parâmetro 'tipo' for informado, retorna apenas os usuários desse tipo.
+        """)
     fun listarUsuarios(@RequestParam(required = false) tipo: Int?): ResponseEntity<List<RespostaUsuario>> {
         val usuarios = if (tipo == null) {
             usuarioRepository.findAll()
@@ -41,12 +47,16 @@ class UsuarioController(
     }
 
     @PostMapping
+    @Operation(summary = "Cadastra um novo usuário.",
+        description = "Retorna status 201 com o usuário cadastrado ou status 400 se houver erro.")
     fun criarUsuario(@RequestBody novoUsuario: Usuario): ResponseEntity<Usuario> {
         val usuarioSalvo = usuarioRepository.save(novoUsuario)
         return ResponseEntity.status(201).body(usuarioSalvo)
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Busca um usuário por ID.",
+        description = "Retorna status 200 com o usuário encontrado ou status 404 se o usuário não for encontrado.")
     fun buscarPorId(@PathVariable id: Int): ResponseEntity<Usuario> {
         val usuarioOptional = usuarioRepository.findById(id)
         return if (usuarioOptional.isPresent) {
@@ -57,6 +67,8 @@ class UsuarioController(
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Atualiza um usuário existente.",
+        description = "Retorna status 200 com o usuário atualizado ou status 404 se o usuário não for encontrado.")
     fun atualizarUsuario(@PathVariable id: Int, @RequestBody usuarioAtualizado: Usuario): ResponseEntity<Usuario> {
         return if (usuarioRepository.existsById(id)) {
             usuarioAtualizado.id = id
@@ -68,6 +80,8 @@ class UsuarioController(
     }
 
     @PatchMapping("/concluir-cadastro/{id}")
+    @Operation(summary = "Conclui o cadastro de um usuário.",
+        description = "Atualiza a data de nascimento e sexo do usuário.")
     fun concluirCadastro(@PathVariable id: Int, @RequestParam dataNasc: LocalDate, @RequestParam sexo: String): ResponseEntity<Usuario> {
         val usuarioOptional = usuarioRepository.findById(id)
         return if (usuarioOptional.isPresent) {
@@ -82,6 +96,8 @@ class UsuarioController(
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Deleta um usuário por ID.",
+        description = "Retorna status 204 se o usuário for deletado ou status 404 se o usuário não for encontrado.")
     fun deletarUsuario(@PathVariable id: Int): ResponseEntity<Void> {
         return if (usuarioRepository.existsById(id)) {
             usuarioRepository.deleteById(id)
@@ -92,6 +108,11 @@ class UsuarioController(
     }
 
     @PostMapping("/login")
+    @Operation(summary = "Realiza o login de um usuário.",
+        description = """
+        Retorna status 200 com o ID do usuário e logado como true se o login for bem-sucedido.
+        Retorna status 401 com logado como false se o login falhar.
+        """)
     fun login(@RequestBody loginRequest: LoginRequest): ResponseEntity<RespostaLogin> {
         val usuario = usuarioRepository.findByEmail(loginRequest.email)
         return if (usuario != null && usuario.senha == loginRequest.senha) {
@@ -111,6 +132,11 @@ class UsuarioController(
     }
 
     @PostMapping("/logoff")
+    @Operation(summary = "Realiza o logoff de um usuário.",
+        description = """
+        Retorna status 200 com o ID do usuário e logado como false se o logoff for bem-sucedido.
+        Retorna status 400 com logado como false se o logoff falhar.
+        """)
     fun logoff(@RequestParam usuarioId: Int): ResponseEntity<RespostaLogin> {
         if (loginStatus[usuarioId] == true) {
             loginStatus[usuarioId] = false
