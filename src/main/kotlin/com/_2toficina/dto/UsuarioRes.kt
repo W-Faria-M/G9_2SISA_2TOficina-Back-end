@@ -1,9 +1,9 @@
 package com._2toficina.dto
 
-data class RespostaUsuario(
+data class UsuarioRes(
     val id: Int,
-    val tipoUsuario: Int,
     val nomeCompleto: String,
+    val tipoUsuario: String,
     val telefone: String?,
     val email: String,
 )
