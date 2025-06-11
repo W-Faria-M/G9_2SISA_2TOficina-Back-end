@@ -10,21 +10,23 @@ data class Veiculo(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int = 0,
 
-    @field:Column(nullable = false, length = 10)
+    @Column(nullable = false, length = 10)
     var placa: String = "",
 
-    @field:Column(nullable = false)
-    var fkUsuario: Int = 0,
+    @JoinColumn(nullable = false, name = "fk_usuario")
+    @ManyToOne
+    var usuario: Usuario? = null,
 
-    @field:Column(nullable = false, length = 45)
+    @Column(nullable = false, length = 45)
     var marca: String = "",
 
-    @field:Column(nullable = false, length = 45)
+    @Column(nullable = false, length = 45)
     var modelo: String = "",
 
-    @field:Column(nullable = false)
+    @Column(nullable = false)
     var ano: Int = 0,
 
-    @field:Column(nullable = false)
+    @Column(nullable = false)
     var km : Double = 0.0,
+
 )
