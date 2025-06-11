@@ -1,6 +1,5 @@
 package com._2toficina.entity
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.*
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -13,33 +12,31 @@ data class Usuario(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int = 0,
 
-    @field:Column
-    var fkEndereco: Int? = null,
+    @JoinColumn(nullable = false, name = "fk_tipo_usuario")
+    @ManyToOne
+    var tipoUsuario: TipoUsuario? = null,
 
-    @field:Column(nullable = false)
-    var fkTipoUsuario: Int = 0,
-
-    @field:Column(nullable = false, length = 45)
+    @Column(nullable = false, length = 45)
     var nome: String = "",
 
-    @field:Column(nullable = false, length = 45)
+    @Column(nullable = false, length = 45)
     var sobrenome: String = "",
 
-    @field:Column(nullable = false, length = 45)
+    @Column(nullable = false, length = 45)
     var telefone: String = "",
 
-    @field:Column(nullable = false, length = 256)
+    @Column(nullable = false, length = 256)
     var email: String = "",
 
-    @field:Column(nullable = false, length = 128)
+    @Column(nullable = false, length = 128)
     var senha: String = "",
 
-    @field:Column(nullable = false, name = "data_cadastro")
+    @Column(nullable = false, name = "data_cadastro")
     var dataCadastro: LocalDateTime = LocalDateTime.now(),
 
-    @field:Column(length = 45)
+    @Column(length = 45)
     var sexo: String? = null,
 
-    @field:Column(name = "data_nasc")
+    @Column(name = "data_nasc")
     var dataNascimento: LocalDate? = null
 )
