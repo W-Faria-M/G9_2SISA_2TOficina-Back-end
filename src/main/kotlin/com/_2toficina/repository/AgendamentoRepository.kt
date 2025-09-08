@@ -4,6 +4,7 @@ import com._2toficina.entity.Agendamento
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
+import java.time.LocalTime
 
 @Repository
 interface AgendamentoRepository: JpaRepository<Agendamento, Int> {
@@ -15,5 +16,7 @@ interface AgendamentoRepository: JpaRepository<Agendamento, Int> {
     fun findByStatusAgendamentoId(statusAgendamentoId: Int): List<Agendamento>
 
     fun findStatusAgendamentoById(id: Int): Agendamento?
+
+    fun existsByDataAndHora(data: LocalDate, hora: LocalTime): Boolean
 
 }

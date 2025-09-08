@@ -1,5 +1,6 @@
 package com._2toficina.controller
 
+import com._2toficina.dto.AgendamentoRes
 import com._2toficina.entity.Agendamento
 import com._2toficina.repository.AgendamentoRepository
 import com._2toficina.repository.ExcecaoRepository
@@ -7,6 +8,7 @@ import com._2toficina.repository.FuncionamentoRepository
 import com._2toficina.repository.StatusAgendamentoRepository
 import io.swagger.v3.oas.annotations.Operation
 import org.apache.el.stream.Optional
+import org.springframework.http.HttpStatusCode
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
@@ -27,9 +29,11 @@ class AgendamentoController(
     @GetMapping
     @Operation(summary = "Lista todos os agendamentos cadastrados.",
         description = "Retorna status 200 com a lista de agendamentos ou status 204 se não houver agendamentos.")
-    fun listarAgendamentos(@RequestParam(required = false) usuarioId: Int?,
-                           @RequestParam(required = false) data: LocalDate?,
-                           @RequestParam(required = false) statusId: Int?): ResponseEntity<List<Agendamento>> {
+    fun listarAgendamentos(
+        @RequestParam(required = false) usuarioId: Int?,
+        @RequestParam(required = false) data: LocalDate?,
+        @RequestParam(required = false) statusId: Int?
+    ): ResponseEntity<List<AgendamentoRes>> {
         val agendamentos: List<Agendamento> = when {
             usuarioId != null && data != null && statusId != null ->
                 agendamentoRepository.findByUsuarioId(usuarioId)
@@ -52,11 +56,24 @@ class AgendamentoController(
             else ->
                 agendamentoRepository.findAll()
         }
-        return if (agendamentos.isEmpty()) {
-            ResponseEntity.status(204).build()
-        } else {
-            return ResponseEntity.status(200).body(agendamentos)
+
+        if (agendamentos.isEmpty()) {
+            return ResponseEntity.status(204).build()
         }
+
+        val resposta = agendamentos.map {
+            AgendamentoRes(
+                nome = it.usuario?.nome ?: "",
+                sobrenome = it.usuario?.sobrenome ?: "",
+                data = it.data!!,
+                hora = it.hora!!,
+                horaRetirada = it.horaRetirada,
+                descricao = it.descricao,
+                statusAgendamento = it.statusAgendamento?.status ?: "",
+                observacao = it.observacao
+            )
+        }
+        return ResponseEntity.status(200).body(resposta)
     }
 
     @GetMapping("/gerar-horas-disponiveis")
@@ -69,23 +86,58 @@ class AgendamentoController(
         }
 
         val funcionamento = funcionamentoRepository.findByDiaSemana(data.dayOfWeek.value)
+        if (funcionamento == null) {
+            throw ResponseStatusException(400, "Dia da semana informado fora do funcionamento.", null)
+        }
+        val agendamentos = agendamentoRepository.findByData(data)
+        val horariosAgendados = agendamentos.mapNotNull { it.hora }.toSet()
 
         val horariosDisponiveis = mutableListOf<String>()
         var hora = funcionamento.inicioFuncionamento
         while (hora!!.isBefore(funcionamento.fimFuncionamento)) {
-            horariosDisponiveis.add(hora.toString())
-            hora = hora.plusHours(1)
+            if (!horariosAgendados.contains(hora)) {
+                horariosDisponiveis.add(hora.toString())
+            }
+            hora = hora.plusHours(2)
         }
-
         return ResponseEntity.ok(horariosDisponiveis)
     }
 
     @PostMapping
     @Operation(summary = "Cadastra um novo agendamento.",
         description = "Retorna status 201 com o agendamento cadastrado ou status 400 se houver erro.")
-    fun criarAgendamento(@RequestBody novoAgendamento: Agendamento): ResponseEntity<Agendamento> {
+    fun criarAgendamento(@RequestBody novoAgendamento: Agendamento): ResponseEntity<AgendamentoRes> {
+        if (novoAgendamento.data == null || novoAgendamento.hora == null) {
+            return ResponseEntity.status(400).build()
+        }
+
+        val funcionamento = funcionamentoRepository.findByDiaSemana(novoAgendamento.data!!.dayOfWeek.value)
+        if (funcionamento == null) {
+            throw ResponseStatusException(400, "Dia da semana informado fora do funcionamento.", null)
+        }
+
+        val horaAgendamento = novoAgendamento.hora!!
+        if (horaAgendamento.isBefore(funcionamento.inicioFuncionamento) || !horaAgendamento.isBefore(funcionamento.fimFuncionamento)) {
+            throw ResponseStatusException(400, "Horário fora do funcionamento.", null)
+        }
+
+        val existe = agendamentoRepository.existsByDataAndHora(novoAgendamento.data!!, novoAgendamento.hora!!)
+        if (existe) {
+            throw ResponseStatusException(400, "Horário já reservado.", null)
+        }
         val agendamentoSalvo = agendamentoRepository.save(novoAgendamento)
-        return ResponseEntity.status(201).body(agendamentoSalvo)
+
+        val resposta = AgendamentoRes(
+            nome = agendamentoSalvo.usuario?.nome ?: "",
+            sobrenome = agendamentoSalvo.usuario?.sobrenome ?: "",
+            data = agendamentoSalvo.data!!,
+            hora = agendamentoSalvo.hora!!,
+            horaRetirada = agendamentoSalvo.horaRetirada,
+            descricao = agendamentoSalvo.descricao,
+            statusAgendamento = agendamentoSalvo.statusAgendamento?.status ?: "",
+            observacao = agendamentoSalvo.observacao
+        )
+        return ResponseEntity.status(201).body(resposta)
     }
 
     @PatchMapping("/atualizar-campo/{id}")
@@ -108,7 +160,7 @@ class AgendamentoController(
             statusAgendamento =
             if (req.statusAgendamento != null) {
                 statusAgendamentoRepository.findById(req.statusAgendamento!!.id)
-                    .orElseThrow { IllegalArgumentException("Status de agendamento não encontrado") }
+                    .orElseThrow { IllegalArgumentException("Status de agendamento não encontrado.") }
             } else {
                 agendamento.statusAgendamento
             }

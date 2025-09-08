@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository
 @Repository
 interface FuncionamentoRepository: JpaRepository<Funcionamento, Int> {
 
-    fun findByDiaSemana(diaSemana: Int): Funcionamento
+    fun findByDiaSemana(diaSemana: Int): Funcionamento?
 
 }
