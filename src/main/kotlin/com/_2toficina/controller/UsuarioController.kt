@@ -20,6 +20,11 @@ class UsuarioController(
 ) {
     val loginStatus = mutableMapOf<Int, Boolean>()
 
+    private fun emailEmUso(email: String, idAtual: Int? = null): Boolean {
+        val usuarioExistente = usuarioRepository.findByEmail(email)
+        return usuarioExistente != null && usuarioExistente.id != idAtual
+    }
+
     @GetMapping
     @Operation(summary = "Lista todos os usuários ou filtra por tipo.",
         description = """Retorna uma lista com os usuários cadastrados.
@@ -51,6 +56,10 @@ class UsuarioController(
     @Operation(summary = "Cadastra um novo usuário.",
         description = "Retorna status 201 com o usuário cadastrado ou status 400 se houver erro.")
     fun criarUsuario(@RequestBody novoUsuario: Usuario): ResponseEntity<Usuario> {
+        if (emailEmUso(novoUsuario.email)) {
+            return ResponseEntity.status(400).build()
+        }
+
         val usuarioSalvo = usuarioRepository.save(novoUsuario)
         return ResponseEntity.status(201).body(usuarioSalvo)
     }
@@ -71,6 +80,10 @@ class UsuarioController(
     @Operation(summary = "Atualiza um usuário existente.",
         description = "Retorna status 200 com o usuário atualizado ou status 404 se o usuário não for encontrado.")
     fun atualizarUsuario(@PathVariable id: Int, @RequestBody usuarioAtualizado: Usuario): ResponseEntity<Usuario> {
+        if (emailEmUso(usuarioAtualizado.email, id)) {
+            return ResponseEntity.status(400).build()
+        }
+
         return if (usuarioRepository.existsById(id)) {
             usuarioAtualizado.id = id
             val usuarioSalvo = usuarioRepository.save(usuarioAtualizado)
@@ -89,6 +102,10 @@ class UsuarioController(
         if (usuarioOpt.isEmpty) return ResponseEntity.status(404).build()
 
         var usuario = usuarioOpt.get()
+        val novoEmail = req.email ?: usuario.email
+        if (emailEmUso(novoEmail, id)) {
+            return ResponseEntity.status(400).build()
+        }
 
         usuario = usuario.copy(
             tipoUsuario =
