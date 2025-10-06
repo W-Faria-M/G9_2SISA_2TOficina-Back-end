@@ -26,6 +26,9 @@ data class Agendamento(
     @Column(nullable = true, name = "hora_retirada")
     var horaRetirada: String? = null,
 
+    @Column(nullable = false)
+    var veiculo: String = "",
+
     @Column(nullable = false, length = 256)
     var descricao: String = "",
 

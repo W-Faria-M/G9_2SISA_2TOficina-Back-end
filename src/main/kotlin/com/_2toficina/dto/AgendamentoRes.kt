@@ -9,6 +9,7 @@ data class AgendamentoRes(
     val data: LocalDate,
     val hora: LocalTime,
     val horaRetirada: String?,
+    val veiculo: String,
     val descricao: String,
     val statusAgendamento: String,
     val observacao: String?
