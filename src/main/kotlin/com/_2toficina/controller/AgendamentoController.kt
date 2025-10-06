@@ -2,6 +2,8 @@ package com._2toficina.controller
 
 import com._2toficina.dto.AgendamentoRes
 import com._2toficina.entity.Agendamento
+import com._2toficina.entity.AgendamentoClienteView
+import com._2toficina.repository.AgendamentoClienteViewRepository
 import com._2toficina.repository.AgendamentoRepository
 import com._2toficina.repository.ExcecaoRepository
 import com._2toficina.repository.FuncionamentoRepository
@@ -23,57 +25,26 @@ class AgendamentoController(
     private val agendamentoRepository: AgendamentoRepository,
     private val funcionamentoRepository: FuncionamentoRepository,
     private val excecaoRepository: ExcecaoRepository,
-    private val statusAgendamentoRepository: StatusAgendamentoRepository
+    private val statusAgendamentoRepository: StatusAgendamentoRepository,
+    private val agendamentoClienteViewRepository: AgendamentoClienteViewRepository
 ) {
 
     @GetMapping
     @Operation(summary = "Lista todos os agendamentos cadastrados.",
         description = "Retorna status 200 com a lista de agendamentos ou status 204 se não houver agendamentos.")
     fun listarAgendamentos(
-        @RequestParam(required = false) usuarioId: Int?,
-        @RequestParam(required = false) data: LocalDate?,
-        @RequestParam(required = false) statusId: Int?
-    ): ResponseEntity<List<AgendamentoRes>> {
-        val agendamentos: List<Agendamento> = when {
-            usuarioId != null && data != null && statusId != null ->
-                agendamentoRepository.findByUsuarioId(usuarioId)
-                    .filter { it.data == data && it.statusAgendamento?.id == statusId }
-            usuarioId != null && data != null ->
-                agendamentoRepository.findByUsuarioId(usuarioId)
-                    .filter { it.data == data }
-            usuarioId != null && statusId != null ->
-                agendamentoRepository.findByUsuarioId(usuarioId)
-                    .filter { it.statusAgendamento?.id == statusId }
-            data != null && statusId != null ->
-                agendamentoRepository.findByStatusAgendamentoId(statusId)
-                    .filter { it.data == data }
-            usuarioId != null ->
-                agendamentoRepository.findByUsuarioId(usuarioId)
-            data != null ->
-                agendamentoRepository.findByData(data)
-            statusId != null ->
-                agendamentoRepository.findByStatusAgendamentoId(statusId)
-            else ->
-                agendamentoRepository.findAll()
-        }
+        @RequestParam(required = false) usuarioId: Int?
+    ): ResponseEntity<List<AgendamentoClienteView>> {
 
-        if (agendamentos.isEmpty()) {
-            return ResponseEntity.status(204).build()
-        }
+        val agendamentos = if (usuarioId != null)
+            agendamentoClienteViewRepository.findByUsuarioId(usuarioId)
+        else
+            agendamentoClienteViewRepository.findAll()
 
-        val resposta = agendamentos.map {
-            AgendamentoRes(
-                nome = it.usuario?.nome ?: "",
-                sobrenome = it.usuario?.sobrenome ?: "",
-                data = it.data!!,
-                hora = it.hora!!,
-                horaRetirada = it.horaRetirada,
-                descricao = it.descricao,
-                statusAgendamento = it.statusAgendamento?.status ?: "",
-                observacao = it.observacao
-            )
-        }
-        return ResponseEntity.status(200).body(resposta)
+        return if (agendamentos.isEmpty())
+            ResponseEntity.noContent().build()
+        else
+            ResponseEntity.ok(agendamentos)
     }
 
     @GetMapping("/gerar-horas-disponiveis")
@@ -133,6 +104,7 @@ class AgendamentoController(
             data = agendamentoSalvo.data!!,
             hora = agendamentoSalvo.hora!!,
             horaRetirada = agendamentoSalvo.horaRetirada,
+            veiculo = agendamentoSalvo.veiculo,
             descricao = agendamentoSalvo.descricao,
             statusAgendamento = agendamentoSalvo.statusAgendamento?.status ?: "",
             observacao = agendamentoSalvo.observacao
