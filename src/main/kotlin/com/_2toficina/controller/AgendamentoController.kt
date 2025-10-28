@@ -173,4 +173,28 @@ class AgendamentoController(
         return ResponseEntity.status(200).build()
     }
 
+    @GetMapping("/kpi1")
+    @Operation(
+        summary = "Retorna os agendamentos do mês atual para KPI.",
+        description = "Retorna status 200 com os agendamentos do mês atual ou status 204 se não houver nenhum."
+    )
+    fun listarAgendamentosKPI1(): ResponseEntity<Map<String, Any>> {
+        val hoje = LocalDate.now()
+        val mesAtual = hoje.monthValue
+        val anoAtual = hoje.year
+
+        val agendamentosDoMes = agendamentoClienteViewRepository.findAll().filter { agendamento ->
+            agendamento.dataAgendamento?.let { data ->
+                data.monthValue == mesAtual && data.year == anoAtual
+            } ?: false
+        }
+
+        if (agendamentosDoMes.isEmpty()) {
+            return ResponseEntity.noContent().build()
+        }
+
+        val response = mapOf("agendamentos" to agendamentosDoMes)
+        return ResponseEntity.ok(response)
+    }
+
 }
