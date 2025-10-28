@@ -16,6 +16,7 @@ import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDate
+import com._2toficina.repository.ServicoAgendadoRepository
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.toString
 
@@ -26,7 +27,8 @@ class AgendamentoController(
     private val funcionamentoRepository: FuncionamentoRepository,
     private val excecaoRepository: ExcecaoRepository,
     private val statusAgendamentoRepository: StatusAgendamentoRepository,
-    private val agendamentoClienteViewRepository: AgendamentoClienteViewRepository
+    private val agendamentoClienteViewRepository: AgendamentoClienteViewRepository,
+    private val servicoAgendadoRepository: ServicoAgendadoRepository
 ) {
 
     @GetMapping
@@ -110,6 +112,36 @@ class AgendamentoController(
             observacao = agendamentoSalvo.observacao
         )
         return ResponseEntity.status(201).body(resposta)
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Deleta um agendamento por ID.",
+        description = "Retorna status 204 se o agendamento for deletado ou status 404 se o agendamento não for encontrado.")
+    fun deletarAgendamento(@PathVariable id: Int): ResponseEntity<Void> {
+        println("Tentando excluir agendamento com ID: $id")
+        return try {
+            val agendamentoOpt = agendamentoRepository.findById(id)
+            if (agendamentoOpt.isEmpty) {
+                println("Agendamento não encontrado: $id")
+                return ResponseEntity.status(404).build()
+            }
+
+            val agendamento = agendamentoOpt.get()
+
+            servicoAgendadoRepository.deleteByAgendamentoId(id)
+
+            agendamentoRepository.delete(agendamento)
+            println("Agendamento excluído com sucesso: $id")
+            ResponseEntity.noContent().build()
+        } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
+            ex.printStackTrace()
+            println("Violação de integridade ao excluir agendamento $id: ${ex.message}")
+            ResponseEntity.status(409).build()
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+            println("Erro inesperado ao excluir agendamento $id: ${ex.message}")
+            ResponseEntity.status(500).build()
+        }
     }
 
     @PatchMapping("/atualizar-campo/{id}")

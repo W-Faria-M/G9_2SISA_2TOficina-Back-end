@@ -16,6 +16,8 @@ interface AgendamentoRepository: JpaRepository<Agendamento, Int> {
     fun findByStatusAgendamentoId(statusAgendamentoId: Int): List<Agendamento>
 
     fun findStatusAgendamentoById(id: Int): Agendamento?
+    
+//    fun deleteByFkAgendamento(id: Int)
 
     fun existsByDataAndHora(data: LocalDate, hora: LocalTime): Boolean
 
