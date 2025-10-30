@@ -1,10 +1,15 @@
 package com._2toficina.controller
 
 import com._2toficina.entity.Servico
+import com._2toficina.entity.ServicosResumidosView
+import com._2toficina.entity.VeiculosClienteView
 import com._2toficina.repository.CategoriaServicoRepository
 import com._2toficina.repository.ServicoAgendadoRepository
 import com._2toficina.repository.ServicoRepository
+import com._2toficina.repository.ServicosResumidosViewRepository
+import com._2toficina.repository.VeiculosClienteViewRepository
 import io.swagger.v3.oas.annotations.Operation
+import org.apache.commons.lang3.mutable.Mutable
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
@@ -14,7 +19,8 @@ import org.springframework.web.bind.annotation.*
 class ServicoController (
     private val servicoRepository: ServicoRepository,
     private val categoriaServicoRepository: CategoriaServicoRepository,
-    private val servicoAgendadoRepository: ServicoAgendadoRepository
+    private val servicoAgendadoRepository: ServicoAgendadoRepository,
+    private val servicosResumidosViewRepository: ServicosResumidosViewRepository
 ){
 
     @GetMapping
@@ -31,6 +37,19 @@ class ServicoController (
             else ->
                 servicoRepository.findAll()
         }
+        return if (servicos.isEmpty()) {
+            ResponseEntity.status(204).build()
+        } else {
+            ResponseEntity.status(200).body(servicos)
+        }
+    }
+
+    @GetMapping("/resumidos")
+    @Operation(summary = "Retorna uma lista resumida com todos os serviços cadastrados.",
+        description = """Retorna status 200 com a lista de serviços, ou
+            status 204 se não houver serviços encontrados.""")
+    fun listarServicosAgendamentos(): ResponseEntity<List<ServicosResumidosView>> {
+        val servicos = servicosResumidosViewRepository.findAll()
         return if (servicos.isEmpty()) {
             ResponseEntity.status(204).build()
         } else {
