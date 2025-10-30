@@ -1,14 +1,18 @@
 package com._2toficina.controller
 
+import com._2toficina.dto.AgendamentoRequest
 import com._2toficina.dto.AgendamentoRes
 import com._2toficina.entity.Agendamento
 import com._2toficina.entity.AgendamentoClienteView
+import com._2toficina.entity.ServicoAgendado
 import com._2toficina.repository.AgendamentoClienteViewRepository
 import com._2toficina.repository.AgendamentoRepository
 import com._2toficina.repository.ExcecaoRepository
 import com._2toficina.repository.FuncionamentoRepository
 import com._2toficina.repository.StatusAgendamentoRepository
+import com._2toficina.repository.UsuarioRepository
 import io.swagger.v3.oas.annotations.Operation
+import jakarta.transaction.Transactional
 import org.apache.el.stream.Optional
 import org.springframework.http.HttpStatusCode
 import org.springframework.http.ResponseEntity
@@ -16,19 +20,20 @@ import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDate
-import com._2toficina.repository.ServicoAgendadoRepository
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.toString
 
 @Controller
 @RequestMapping("/agendamentos")
 class AgendamentoController(
+    private val usuarioRepository: UsuarioRepository,
     private val agendamentoRepository: AgendamentoRepository,
+    private val servicoRepository: com._2toficina.repository.ServicoRepository,
+    private val servicoAgendadoRepository: com._2toficina.repository.ServicoAgendadoRepository,
     private val funcionamentoRepository: FuncionamentoRepository,
     private val excecaoRepository: ExcecaoRepository,
     private val statusAgendamentoRepository: StatusAgendamentoRepository,
-    private val agendamentoClienteViewRepository: AgendamentoClienteViewRepository,
-    private val servicoAgendadoRepository: ServicoAgendadoRepository
+    private val agendamentoClienteViewRepository: AgendamentoClienteViewRepository
 ) {
 
     @GetMapping
@@ -77,41 +82,40 @@ class AgendamentoController(
     }
 
     @PostMapping
-    @Operation(summary = "Cadastra um novo agendamento.",
-        description = "Retorna status 201 com o agendamento cadastrado ou status 400 se houver erro.")
-    fun criarAgendamento(@RequestBody novoAgendamento: Agendamento): ResponseEntity<AgendamentoRes> {
-        if (novoAgendamento.data == null || novoAgendamento.hora == null) {
-            return ResponseEntity.status(400).build()
-        }
+    @Operation(
+        summary = "Cadastra um novo agendamento.",
+        description = "Retorna status 201 com o agendamento cadastrado ou status 400 se houver erro."
+    )
+    @Transactional
+    fun criarAgendamento(@RequestBody request: AgendamentoRequest): ResponseEntity<Agendamento> {
+        val usuario = usuarioRepository.findById(request.usuarioId)
+            .orElseThrow { IllegalArgumentException("Usuário não encontrado") }
 
-        val funcionamento = funcionamentoRepository.findByDiaSemana(novoAgendamento.data!!.dayOfWeek.value)
-        if (funcionamento == null) {
-            throw ResponseStatusException(400, "Dia da semana informado fora do funcionamento.", null)
-        }
+        val status = statusAgendamentoRepository.findById(1)
+            .orElseThrow { IllegalArgumentException("Status padrão 'Pendente' não encontrado") }
 
-        val horaAgendamento = novoAgendamento.hora!!
-        if (horaAgendamento.isBefore(funcionamento.inicioFuncionamento) || !horaAgendamento.isBefore(funcionamento.fimFuncionamento)) {
-            throw ResponseStatusException(400, "Horário fora do funcionamento.", null)
-        }
-
-        val existe = agendamentoRepository.existsByDataAndHora(novoAgendamento.data!!, novoAgendamento.hora!!)
-        if (existe) {
-            throw ResponseStatusException(400, "Horário já reservado.", null)
-        }
-        val agendamentoSalvo = agendamentoRepository.save(novoAgendamento)
-
-        val resposta = AgendamentoRes(
-            nome = agendamentoSalvo.usuario?.nome ?: "",
-            sobrenome = agendamentoSalvo.usuario?.sobrenome ?: "",
-            data = agendamentoSalvo.data!!,
-            hora = agendamentoSalvo.hora!!,
-            horaRetirada = agendamentoSalvo.horaRetirada,
-            veiculo = agendamentoSalvo.veiculo,
-            descricao = agendamentoSalvo.descricao,
-            statusAgendamento = agendamentoSalvo.statusAgendamento?.status ?: "",
-            observacao = agendamentoSalvo.observacao
+        val agendamento = Agendamento(
+            usuario = usuario,
+            data = request.data,
+            hora = request.hora,
+            veiculo = request.veiculo,
+            descricao = request.descricao,
+            observacao = request.observacao,
+            statusAgendamento = status
         )
-        return ResponseEntity.status(201).body(resposta)
+
+        val agendamentoSalvo = agendamentoRepository.save(agendamento)
+
+        request.servicosIds.forEach { servicoId ->
+            val servico = servicoRepository.findById(servicoId)
+                .orElseThrow { IllegalArgumentException("Serviço não encontrado (ID $servicoId)") }
+
+            servicoAgendadoRepository.save(
+                ServicoAgendado(agendamento = agendamentoSalvo, servico = servico)
+            )
+        }
+
+        return ResponseEntity.status(201).body(agendamentoSalvo)
     }
 
     @DeleteMapping("/{id}")
