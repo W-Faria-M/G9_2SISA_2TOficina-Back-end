@@ -4,7 +4,9 @@ import com._2toficina.dto.EnderecoRes
 import com._2toficina.dto.LoginReq
 import com._2toficina.dto.LoginRes
 import com._2toficina.dto.UsuarioRes
+import com._2toficina.entity.PerfilUsuarioView
 import com._2toficina.entity.Usuario
+import com._2toficina.repository.PerfilUsuarioViewRepository
 import com._2toficina.repository.TipoUsuarioRepository
 import com._2toficina.repository.UsuarioRepository
 import io.swagger.v3.oas.annotations.Operation
@@ -16,7 +18,8 @@ import java.time.LocalDate
 @RequestMapping("/usuarios")
 class UsuarioController(
     private val usuarioRepository: UsuarioRepository,
-    private val tipoUsuarioRepository: TipoUsuarioRepository
+    private val tipoUsuarioRepository: TipoUsuarioRepository,
+    private val perfilUsuarioViewRepository: PerfilUsuarioViewRepository
 ) {
     val loginStatus = mutableMapOf<Int, Boolean>()
 
@@ -26,29 +29,20 @@ class UsuarioController(
     }
 
     @GetMapping
-    @Operation(summary = "Lista todos os usuários ou filtra por tipo.",
-        description = """Retorna uma lista com os usuários cadastrados.
-        Se o parâmetro 'tipo' for informado, retorna apenas os usuários desse tipo.""")
-    fun listarUsuarios(@RequestParam(required = false) tipo: Int?): ResponseEntity<List<UsuarioRes>> {
-        val usuarios = if (tipo == null) {
-            usuarioRepository.findAll()
-        } else {
-            usuarioRepository.findByTipoUsuarioId(tipo)
-        }
+    @Operation(
+        summary = "Retorna os dados de perfil do usuário.",
+        description = """
+        Retorna as informações completas do perfil do usuário, incluindo dados pessoais e veículos associados.
+        Requer o parâmetro 'usuarioId' para identificar o usuário.
+    """
+    )
+    fun dadosPerfil(@RequestParam usuarioId: Int): ResponseEntity<List<PerfilUsuarioView>> {
+        val perfil = perfilUsuarioViewRepository.findByUsuarioId(usuarioId)
 
-        return if (usuarios.isEmpty()) {
+        return if (perfil.isEmpty()) {
             ResponseEntity.status(204).build()
         } else {
-            val usuarioRes = usuarios.map { usuario ->
-                UsuarioRes(
-                    id = usuario.id,
-                    tipoUsuario = usuario.tipoUsuario!!.tipo,
-                    nomeCompleto = "${usuario.nome} ${usuario.sobrenome}",
-                    telefone = usuario.telefone,
-                    email = usuario.email
-                )
-            }
-            ResponseEntity.status(200).body(usuarioRes)
+            ResponseEntity.status(200).body(perfil)
         }
     }
 
