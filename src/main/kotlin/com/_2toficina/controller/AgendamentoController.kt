@@ -16,6 +16,7 @@ import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.toString
 
@@ -164,5 +165,55 @@ class AgendamentoController(
         val response = mapOf("agendamentos" to agendamentosDoMes)
         return ResponseEntity.ok(response)
     }
+
+    @GetMapping("/kpi2")
+    @Operation(
+        summary = "Retorna os agendamentos do dia atual para KPI.",
+        description = "Retorna status 200 com os agendamentos do dia atual ou status 204 se não houver nenhum."
+    )
+    fun listarAgendamentosKPI2(): ResponseEntity<Map<String, Any>> {
+        val hoje = LocalDate.now()
+
+        val agendamentosDoDia = agendamentoClienteViewRepository.findAll().filter { agendamento ->
+            agendamento.dataAgendamento?.isEqual(hoje) == true
+        }
+
+        if (agendamentosDoDia.isEmpty()) {
+            return ResponseEntity.noContent().build()
+        }
+
+        val response = mapOf("agendamentos" to agendamentosDoDia)
+        return ResponseEntity.ok(response)
+    }
+
+    @GetMapping("/kpi3")
+    @Operation(
+        summary = "Retorna todos os agendamentos formatados para a KPI3.",
+        description = "Retorna status 200 com os agendamentos formatados no padrão esperado pelo frontend."
+    )
+    fun listarAgendamentosKPI3(): ResponseEntity<Map<String, Any>> {
+        val agendamentos = agendamentoClienteViewRepository.findAll()
+
+        if (agendamentos.isEmpty()) {
+            return ResponseEntity.noContent().build()
+        }
+
+        val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+
+        val agendamentosFormatados = agendamentos.map { ag ->
+            mapOf(
+                "id" to ag.agendamentoId,
+                "veiculo" to ag.nomeVeiculo,
+                "servico" to ag.servicos,
+                "data" to ag.dataAgendamento?.format(dateFormatter),
+                "hora" to ag.horaAgendamento?.format(timeFormatter)
+            )
+        }
+
+        val response = mapOf("agendamentos" to agendamentosFormatados)
+        return ResponseEntity.ok(response)
+    }
+
 
 }
