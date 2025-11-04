@@ -215,5 +215,35 @@ class AgendamentoController(
         return ResponseEntity.ok(response)
     }
 
+    @GetMapping("/kpi4")
+    @Operation(
+        summary = "Retorna todos os agendamentos formatados para a KPI4.",
+        description = "Retorna status 200 com os agendamentos formatados no padrão esperado pelo frontend."
+    )
+    fun listarAgendamentosKPI4(): ResponseEntity<Map<String, Any>> {
+        val agendamentos = agendamentoClienteViewRepository.findAll()
+
+        if (agendamentos.isEmpty()) {
+            return ResponseEntity.noContent().build()
+        }
+
+        val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+
+        val agendamentosFormatados = agendamentos.map { ag ->
+            mapOf(
+                "id" to ag.agendamentoId,
+                "veiculo" to ag.nomeVeiculo,
+                "servico" to ag.servicos,
+                "data" to ag.dataAgendamento?.format(dateFormatter),
+                "hora" to ag.horaAgendamento?.format(timeFormatter),
+                "status" to (ag.status ?: "Aguardando") // <- necessário pro front colorir
+            )
+        }
+
+        val response = mapOf("agendamentos" to agendamentosFormatados)
+        return ResponseEntity.ok(response)
+    }
+
 
 }
