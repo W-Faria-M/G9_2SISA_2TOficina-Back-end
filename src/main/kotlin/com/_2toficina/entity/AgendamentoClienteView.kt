@@ -16,6 +16,9 @@ data class AgendamentoClienteView(
     @Column(name = "id_usuario")
     val usuarioId: Int?,
 
+    @Column(name = "nome_cliente")
+    val nomeCliente: String?,
+
     @Column(name = "nome_veiculo")
     val nomeVeiculo: String?,
 
@@ -40,17 +43,18 @@ data class AgendamentoClienteView(
     @Column(name = "servicos")
     val servicos: String?
 ) {
-    // construtor vazio exigido pelo Hibernate
+
     constructor() : this(
         agendamentoId = null,
+        usuarioId = null,
+        nomeCliente = null,
+        nomeVeiculo = null,
         dataAgendamento = null,
-        descricao = null,
         horaAgendamento = null,
         horaRetirada = null,
-        usuarioId = null,
-        nomeVeiculo = null,
+        status = null,
+        descricao = null,
         observacao = null,
-        servicos = null,
-        status = null
+        servicos = null
     )
 }

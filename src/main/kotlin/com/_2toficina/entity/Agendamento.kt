@@ -1,5 +1,6 @@
 package com._2toficina.entity
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import jakarta.persistence.*
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -39,4 +40,13 @@ data class Agendamento(
     @Column(nullable = true, length = 256)
     var observacao: String? = null
 
-)
+) {
+    @JsonProperty("usuarioId")
+    fun getUsuarioId(): Int? = usuario?.id
+
+    @JsonProperty("username")
+    fun getUsername(): String? = "${usuario?.nome ?: ""} ${usuario?.sobrenome ?: ""}".trim()
+
+    @JsonProperty("status")
+    fun getStatus(): String? = statusAgendamento?.status
+}

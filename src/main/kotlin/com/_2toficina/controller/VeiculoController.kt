@@ -1,7 +1,9 @@
 package com._2toficina.controller
 
 import com._2toficina.entity.Veiculo
+import com._2toficina.entity.VeiculosClienteView
 import com._2toficina.repository.VeiculoRepository
+import com._2toficina.repository.VeiculosClienteViewRepository
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -9,18 +11,19 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/veiculos")
 class VeiculoController (
-    private val veiculoRepository: VeiculoRepository
+    private val veiculoRepository: VeiculoRepository,
+    private val veiculosClienteViewRepository: VeiculosClienteViewRepository
 ) {
     @GetMapping
-    @Operation(summary = "Lista todos os veículos ou filtra por cliente.",
-        description = """Retorna uma lista com os veículos cadastrados.
-        Se o parâmetro 'fkUsuario' for informado, retorna apenas os veículos desse usuário.""")
-    fun listarVeiculos(@RequestParam(required = false) usuarioId: Int?): ResponseEntity<List<Veiculo>> {
-        val veiculos = if (usuarioId == null) {
-            veiculoRepository.findAll()
-        } else {
-            veiculoRepository.findByUsuarioId(usuarioId)
-        }
+    @Operation(
+        summary = "Lista veículos de um cliente.",
+        description = """
+        Retorna os veículos pertencentes ao usuário informado via parâmetro 'usuarioId'.
+        Os dados são obtidos diretamente da view 'vw_veiculos_usuario', já formatados com marca, modelo e placa.
+    """
+    )
+    fun listarVeiculos(@RequestParam usuarioId: Int): ResponseEntity<List<VeiculosClienteView>> {
+        val veiculos = veiculosClienteViewRepository.findByUsuarioId(usuarioId)
 
         return if (veiculos.isEmpty()) {
             ResponseEntity.status(204).build()
