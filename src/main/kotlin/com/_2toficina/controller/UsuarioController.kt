@@ -1,9 +1,6 @@
 package com._2toficina.controller
 
-import com._2toficina.dto.EnderecoRes
-import com._2toficina.dto.LoginReq
-import com._2toficina.dto.LoginRes
-import com._2toficina.dto.UsuarioRes
+import com._2toficina.dto.*
 import com._2toficina.entity.PerfilUsuarioView
 import com._2toficina.entity.Usuario
 import com._2toficina.repository.PerfilUsuarioViewRepository
@@ -175,4 +172,23 @@ class UsuarioController(
             )
         )
     }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Redefine senha a partir do e-mail (sem token).", description = "Procura usuário por email e sobrescreve a senha.")
+    fun resetPassword(@RequestBody req: RedefSenha): ResponseEntity<Void> {
+        val usuario = usuarioRepository.findByEmail(req.email)
+        if (usuario == null) {
+            return ResponseEntity.status(404).build()
+        }
+
+        // validação mínima
+        if (req.senhaNova.length < 6) {
+            return ResponseEntity.status(400).build()
+        }
+
+        val atualizado = usuario.copy(senha = req.senhaNova)
+        usuarioRepository.save(atualizado)
+        return ResponseEntity.status(200).build()
+    }
+
 }
