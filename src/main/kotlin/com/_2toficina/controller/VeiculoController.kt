@@ -2,8 +2,10 @@ package com._2toficina.controller
 
 import com._2toficina.entity.Veiculo
 import com._2toficina.entity.VeiculosClienteView
+import com._2toficina.entity.VeiculosPerfilView
 import com._2toficina.repository.VeiculoRepository
 import com._2toficina.repository.VeiculosClienteViewRepository
+import com._2toficina.repository.VeiculosPerfilViewRepository
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -12,7 +14,8 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/veiculos")
 class VeiculoController (
     private val veiculoRepository: VeiculoRepository,
-    private val veiculosClienteViewRepository: VeiculosClienteViewRepository
+    private val veiculosClienteViewRepository: VeiculosClienteViewRepository,
+    private val veiculosPerfilViewRepository: VeiculosPerfilViewRepository
 ) {
     @GetMapping
     @Operation(
@@ -31,6 +34,25 @@ class VeiculoController (
             ResponseEntity.status(200).body(veiculos)
         }
     }
+
+    @GetMapping("/perfil")
+    @Operation(
+        summary = "Lista os veículos exibidos no perfil do usuário.",
+        description = """
+        Retorna os veículos do usuário informados via parâmetro 'usuarioId'.
+        Os dados são obtidos da view 'vw_veiculos_perfil'.
+    """
+    )
+    fun listarVeiculosPerfil(@RequestParam usuarioId: Int): ResponseEntity<List<VeiculosPerfilView>> {
+        val veiculos = veiculosPerfilViewRepository.findByUsuarioId(usuarioId)
+
+        return if (veiculos.isEmpty()) {
+            ResponseEntity.status(204).build()
+        } else {
+            ResponseEntity.status(200).body(veiculos)
+        }
+    }
+
 
     @PostMapping
     @Operation(summary = "Cadastra um novo veículo.",

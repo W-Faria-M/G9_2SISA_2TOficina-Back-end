@@ -20,24 +20,6 @@ data class PerfilUsuarioView(
     @Column(name = "telefone")
     val telefone: String? = null,
 
-    @Column(name = "id_veiculo")
-    val idVeiculo: Int? = null,
-
-    @Column(name = "marca")
-    val marca: String? = null,
-
-    @Column(name = "modelo")
-    val modelo: String? = null,
-
-    @Column(name = "ano")
-    val ano: Int? = null,
-
-    @Column(name = "km")
-    val km: Int? = null,
-
-    @Column(name = "placa")
-    val placa: String? = null,
-
     @Column(name = "qtd_pendentes")
     val qtdPendentes: Int? = null,
 
@@ -51,12 +33,6 @@ data class PerfilUsuarioView(
         nomeCompleto = null,
         email = null,
         telefone = null,
-        idVeiculo = null,
-        marca = null,
-        modelo = null,
-        ano = null,
-        km = null,
-        placa = null,
         qtdPendentes = null,
         qtdConcluidos = null
     )
