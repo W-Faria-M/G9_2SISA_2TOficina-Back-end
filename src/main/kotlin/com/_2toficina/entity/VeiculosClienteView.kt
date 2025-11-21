@@ -15,12 +15,16 @@ data class VeiculosClienteView(
     val usuarioId: Int?,
 
     @Column(name = "descricao_veiculo")
-    val descricaoVeiculo: String?
+    val descricaoVeiculo: String?,
+
+    @Column(name = "km")
+    val km: Double? = null
 ) {
     // construtor vazio exigido pelo Hibernate
     constructor() : this(
         veiculoId = null,
         usuarioId = null,
-        descricaoVeiculo = null
+        descricaoVeiculo = null,
+        km = null
     )
 }

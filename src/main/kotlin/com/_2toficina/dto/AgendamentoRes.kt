@@ -12,5 +12,7 @@ data class AgendamentoRes(
     val veiculo: String,
     val descricao: String,
     val statusAgendamento: String,
-    val observacao: String?
+    val observacao: String?,
+    val veiculoId: Int,
+    val km: Int?
 )
