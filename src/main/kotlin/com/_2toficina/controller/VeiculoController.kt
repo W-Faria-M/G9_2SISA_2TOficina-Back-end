@@ -75,25 +75,42 @@ class VeiculoController (
         }
     }
 
+//    @PatchMapping("/atualizar-campo/{id}")
+//    @Operation(summary = "Atualiza um ou mais campos de um veículo específico.",
+//        description = "Retorna status 200 se algum campo for atualizado ou status 404 se o veículo não for encontrado.")
+//    fun atualizarCampoVeiculo(@PathVariable id: Int, @RequestBody req: Veiculo): ResponseEntity<Void> {
+//        val veiculoOpt = veiculoRepository.findById(id)
+//        if (veiculoOpt.isEmpty) return ResponseEntity.status(404).build()
+//
+//        var veiculo = veiculoOpt.get()
+//
+//        veiculo = veiculo.copy(
+//            placa = req.placa ?: veiculo.placa,
+//            marca = req.marca ?: veiculo.marca,
+//            modelo = req.modelo ?: veiculo.modelo,
+//            ano = req.ano ?: veiculo.ano,
+//            km = req.km ?: veiculo.km,
+//        )
+//        veiculoRepository.save(veiculo)
+//        return ResponseEntity.status(200).build()
+//    }
+
     @PatchMapping("/atualizar-campo/{id}")
-    @Operation(summary = "Atualiza um ou mais campos de um veículo específico.",
-        description = "Retorna status 200 se algum campo for atualizado ou status 404 se o veículo não for encontrado.")
     fun atualizarCampoVeiculo(@PathVariable id: Int, @RequestBody req: Veiculo): ResponseEntity<Void> {
-        val veiculoOpt = veiculoRepository.findById(id)
-        if (veiculoOpt.isEmpty) return ResponseEntity.status(404).build()
+        val veiculo = veiculoRepository.findById(id).orElse(null)
+            ?: return ResponseEntity.status(404).build()
 
-        var veiculo = veiculoOpt.get()
+        req.km?.let { veiculo.km = it }
+        req.placa?.takeIf { it.isNotBlank() }?.let { veiculo.placa = it }
+        req.marca?.takeIf { it.isNotBlank() }?.let { veiculo.marca = it }
+        req.modelo?.takeIf { it.isNotBlank() }?.let { veiculo.modelo = it }
+        req.ano?.let { veiculo.ano = it }
 
-        veiculo = veiculo.copy(
-            placa = req.placa ?: veiculo.placa,
-            marca = req.marca ?: veiculo.marca,
-            modelo = req.modelo ?: veiculo.modelo,
-            ano = req.ano ?: veiculo.ano,
-            km = req.km ?: veiculo.km,
-        )
         veiculoRepository.save(veiculo)
-        return ResponseEntity.status(200).build()
+
+        return ResponseEntity.ok().build()
     }
+
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Deleta um veículo por ID.",
