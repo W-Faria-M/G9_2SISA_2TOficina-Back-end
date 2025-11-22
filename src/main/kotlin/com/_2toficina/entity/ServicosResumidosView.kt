@@ -12,11 +12,16 @@ data class ServicosResumidosView(
     val servicoId: Int?,
 
     @Column(name = "nome_servico")
-    val nomeServico: String?
+    val nomeServico: String?,
+
+    @Column(name = "status")
+    val status: Int?
+
 ) {
     // construtor vazio exigido pelo Hibernate
     constructor() : this(
         servicoId = null,
         nomeServico = null,
+        status = null
     )
 }

@@ -23,4 +23,8 @@ data class Servico(
     @Column(nullable = false, name = "eh_rapido")
     var ehRapido: Boolean = false,
 
+    @JoinColumn(nullable = false, name = "fk_status_servico")
+    @ManyToOne
+    var statusServico: StatusServico? = null,
+
 )
