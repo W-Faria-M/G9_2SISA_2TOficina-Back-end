@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository
 @Repository
 interface ServicosResumidosViewRepository : JpaRepository<ServicosResumidosView, Int> {
 
+    fun findByStatus(status: Int): List<ServicosResumidosView>
+
 }
