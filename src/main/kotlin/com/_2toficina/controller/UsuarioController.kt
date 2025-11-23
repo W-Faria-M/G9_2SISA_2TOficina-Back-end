@@ -1,8 +1,10 @@
 package com._2toficina.controller
 
+import com._2toficina.avatar.DefaultAvatarFactory
 import com._2toficina.dto.*
 import com._2toficina.entity.PerfilUsuarioView
 import com._2toficina.entity.Usuario
+import com._2toficina.repository.AvatarRepository
 import com._2toficina.repository.PerfilUsuarioViewRepository
 import com._2toficina.repository.TipoUsuarioRepository
 import com._2toficina.repository.UsuarioRepository
@@ -16,7 +18,8 @@ import java.time.LocalDate
 class UsuarioController(
     private val usuarioRepository: UsuarioRepository,
     private val tipoUsuarioRepository: TipoUsuarioRepository,
-    private val perfilUsuarioViewRepository: PerfilUsuarioViewRepository
+    private val perfilUsuarioViewRepository: PerfilUsuarioViewRepository,
+    private val avatarRepository: AvatarRepository
 ) {
     val loginStatus = mutableMapOf<Int, Boolean>()
 
@@ -52,6 +55,12 @@ class UsuarioController(
         }
 
         val usuarioSalvo = usuarioRepository.save(novoUsuario)
+        if (!avatarRepository.existsByUsuario_Id(usuarioSalvo.id)) {
+            val avatarPadrao = DefaultAvatarFactory.create(usuarioSalvo)
+            avatarRepository.save(avatarPadrao)
+            usuarioSalvo.avatar = avatarPadrao
+        }
+
         return ResponseEntity.status(201).body(usuarioSalvo)
     }
 

@@ -38,5 +38,10 @@ data class Usuario(
     var sexo: String? = null,
 
     @Column(name = "data_nasc")
-    var dataNascimento: LocalDate? = null
-)
+    var dataNascimento: LocalDate? = null,
+
+    @OneToOne(mappedBy = "usuario", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    var avatar: Avatar? = null
+
+) {
+}
