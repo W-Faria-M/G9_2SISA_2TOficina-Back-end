@@ -1,6 +1,7 @@
 // src/main/kotlin/com/_2toficina/entity/Avatar.kt
 package com._2toficina.entity
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import jakarta.persistence.*
 
@@ -11,6 +12,7 @@ data class Avatar(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int = 0,
 
+    @JsonIgnore
     @OneToOne
     @JoinColumn(name = "fk_usuario", nullable = false, unique = true)
     var usuario: Usuario? = null,
@@ -32,7 +34,9 @@ data class Avatar(
     @Column(nullable = false)
     var mouthType: String = "",
     @Column(nullable = false)
-    var skinColor: String = ""
+    var skinColor: String = "",
+
+
 ) {
     @JsonProperty("usuarioId")
     fun getUsuarioId(): Int? = usuario?.id
