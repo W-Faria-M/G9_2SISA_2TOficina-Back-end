@@ -269,17 +269,17 @@ class AgendamentoController(
         val agendamentosFormatados = agendamentos.map { ag ->
             mapOf(
                 "id" to ag.agendamentoId,
+                "usuarioId" to ag.usuarioId,
+                "usuarioNome" to (ag.nomeCliente ?: "Usuário"),
                 "veiculo" to ag.nomeVeiculo,
                 "servico" to ag.servicos,
                 "data" to ag.dataAgendamento?.format(dateFormatter),
                 "hora" to ag.horaAgendamento?.format(timeFormatter),
-                "status" to (ag.status ?: "Aguardando") // <- necessário pro front colorir
+                "status" to (ag.status ?: "Aguardando")
             )
         }
 
         val response = mapOf("agendamentos" to agendamentosFormatados)
         return ResponseEntity.ok(response)
     }
-
-
 }
